@@ -53,21 +53,24 @@ controller.saveToQueue = function (request,response) {
 
     console.log(count.call(request.files));
     console.log(request.files);
-    const countFile = count.call(request.files)
-    const file = request.files;
+    if(request.files){
+        const countFile = count.call(request.files)
+        const file = request.files;
 
-    if(countFile >= 1){
-        for(var i = 0;i < countFile;i++){
-            var fileServer = Math.floor((Math.random() * 1000000000) + 1)+getTypeFile(file[i].name);
+        if(countFile >= 1){
+            for(var i = 0;i < countFile;i++){
+                var fileServer = Math.floor((Math.random() * 1000000000) + 1)+getTypeFile(file[i].name);
 
-            fileNameServer.push(fileServer);
-            fileNameSend.push(file[i].name);
-            file[i].mv('./fileupload/'+fileServer, function(err) {
-                if (!err)
-                    console.log('upload success');
-            });
+                fileNameServer.push(fileServer);
+                fileNameSend.push(file[i].name);
+                file[i].mv('./fileupload/'+fileServer, function(err) {
+                    if (!err)
+                        console.log('upload success');
+                });
+            }
         }
     }
+
 
     saveQueue(postParse,queueId,fileNameSend,fileNameServer)
         .then(function (res) {
@@ -87,7 +90,7 @@ controller.sendMail = function (queueId) {
         .then(function (listQueue) {
             if(listQueue){
                 var attachments = [];
-                var lent = listQueue[0].fileNameSend.length || 1;
+                var lent = listQueue[0].fileNameSend.length || 0;
                 for(var i=0;i<lent;i++){
                     attachments.push({filename: listQueue[0].fileNameSend[i], content: fs.readFileSync('./fileupload/'+listQueue[0].fileNameServer[i])});
                 }
@@ -100,8 +103,8 @@ controller.sendMail = function (queueId) {
 
                 for(item of listQueue){
                     var mailOptions = {
-                        // from: 'support@safsa.vn', // sender address
-                        from: 'vule.ask@gmail.com', // sender address
+                        from: 'support@safsa.vn', // sender address
+                        // from: 'vule.ask@gmail.com', // sender address
                         to: item.to, // list of receivers
                         subject: item.subject, // Subject line
                         text: item.text, // plain text body
