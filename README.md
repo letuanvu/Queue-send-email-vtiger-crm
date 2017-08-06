@@ -2,8 +2,9 @@
 When must to send a lot of emails
 
 # Installation
-npm install<br>
-npm start
+1. You must have the mongodb service running on port 27017
+2. npm install<br>
+3. npm start
 
 # How to use?
 
