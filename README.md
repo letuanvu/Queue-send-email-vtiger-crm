@@ -1,7 +1,7 @@
 # Queue-send-email-vtiger-crm
 When must to send a lot of emails
 
-## Installation
+# Installation
 npm install<br>
 npm start
 
