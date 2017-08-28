@@ -10,6 +10,7 @@ const saveQueue = function (postParse,queueId,fileNameSend,fileNameServer) {
         var count = 0;
         for(var item of postParse){
             var data = item;
+
             data.fileNameSend = fileNameSend;
             data.fileNameServer = fileNameServer;
             data.isSend = false;
@@ -54,7 +55,7 @@ controller.saveToQueue = function (request,response) {
     console.log(count.call(request.files));
     console.log(request.files);
     if(request.files){
-        const countFile = count.call(request.files)
+        const countFile = count.call(request.files);
         const file = request.files;
 
         if(countFile >= 1){
@@ -71,11 +72,15 @@ controller.saveToQueue = function (request,response) {
         }
     }
 
-
     saveQueue(postParse,queueId,fileNameSend,fileNameServer)
         .then(function (res) {
-            console.log("Success added queue, start sent mail to queue",res);
-            controller.sendMail(res);
+
+            if(postParse[0].timeToSent == ''){
+                console.log("Success added queue, start sent mail to queue",res);
+                controller.sendMail(res);
+            } else {
+                console.log("Success added queue, start sent mail ",postParse[0].timeToSent);
+            }
 
             response.writeHead(201, { 'Content-Type': 'text/plain' });
             response.end(JSON.stringify({status: 201 ,data: res}));
@@ -85,51 +90,68 @@ controller.saveToQueue = function (request,response) {
         });
 };
 
+controller.sentDelayTime = function (datetime) {
+    queueModel.getQueueByTime(datetime)
+        .then(function (listQueue) {
+            if(listQueue[0] != undefined){
+                sentMail(listQueue);
+            }
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
+};
+
 controller.sendMail = function (queueId) {
     queueModel.getListByQueueId(queueId)
         .then(function (listQueue) {
-            if(listQueue){
-                var attachments = [];
-                var lent = listQueue[0].fileNameSend.length || 0;
-                for(var i=0;i<lent;i++){
-                    attachments.push({filename: listQueue[0].fileNameSend[i], content: fs.readFileSync('./fileupload/'+listQueue[0].fileNameServer[i])});
-                }
-
-                var arrayId = [];
-                for(item of listQueue) arrayId.push(item._id);
-                queueModel.updateSend(arrayId)
-                    .then(function (res) {
-                    });
-
-                for(item of listQueue){
-                    var mailOptions = {
-                        from: 'support@safsa.vn', // sender address
-                        // from: 'vule.ask@gmail.com', // sender address
-                        to: item.to, // list of receivers
-                        subject: item.subject, // Subject line
-                        text: item.text, // plain text body
-                        html: item.html, // html body,
-                        replyTo: item.replyTo,
-                        cc: item.cc,
-                        bcc: item.bcc,
-                        attachments: attachments
-                    };
-
-                    mailling.sendMail(mailOptions, function(error, info){
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log('Email send '+ info.response);
-
-                        }
-                    });
-                }//end for
+            if(listQueue[0] != undefined){
+                sentMail(listQueue);
             }
-
         })
         .catch(function (err) {
             console.log(err);
         });
 };
+
+function sentMail(listQueue) {
+    if(listQueue){
+        var attachments = [];
+        var lent = listQueue[0].fileNameSend.length || 0;
+        for(var i=0;i<lent;i++){
+            attachments.push({filename: listQueue[0].fileNameSend[i], content: fs.readFileSync('./fileupload/'+listQueue[0].fileNameServer[i])});
+        }
+
+        var arrayId = [];
+        for(item of listQueue) arrayId.push(item._id);
+        queueModel.updateSend(arrayId)
+            .then(function (res) {
+            });
+
+        for(item of listQueue){
+            var mailOptions = {
+                from: 'support@safsa.vn', // sender address
+                // from: 'vule.ask@gmail.com', // sender address
+                to: item.to, // list of receivers
+                subject: item.subject, // Subject line
+                text: item.text, // plain text body
+                html: item.html, // html body,
+                replyTo: item.replyTo,
+                cc: item.cc,
+                bcc: item.bcc,
+                attachments: attachments
+            };
+
+            mailling.sendMail(mailOptions, function(error, info){
+                if (error) {
+                    console.log(error);
+                } else {
+                    console.log('Email send '+ info.response);
+
+                }
+            });
+        }//end for
+    }
+}
 
 module.exports = controller;

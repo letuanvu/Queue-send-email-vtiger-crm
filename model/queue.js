@@ -10,8 +10,10 @@ const queueSchema = new Schema({
     replyTo: String,
     cc: String,
     bcc: String,
+    timeToSent: String,
     fileNameSend: [String],
     fileNameServer: [String],
+    emailId: Number,
     isSend: Boolean,
     createdAt: { type: Date, default: Date.now },
     isDeleted: { type: Boolean, default: false }

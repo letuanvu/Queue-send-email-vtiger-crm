@@ -1,8 +1,8 @@
 var queue = require('./queue');
 var ObjectId = require('mongoose').Types.ObjectId;
-var queueController = {};
+var queueModel = {};
 
-queueController.add = function(data) {
+queueModel.add = function(data) {
     return new Promise(function(res, rej){
         const email = new queue({
             to: data.to,
@@ -14,6 +14,7 @@ queueController.add = function(data) {
             cc: data.cc,
             bcc: data.bcc,
             isSend: data.isSend,
+            timeToSent: data.timeToSent,
             fileNameSend: data.fileNameSend,
             fileNameServer: data.fileNameServer
 
@@ -25,7 +26,7 @@ queueController.add = function(data) {
     });
 };
 
-queueController.getListByQueueId = function (queueId) {
+queueModel.getListByQueueId = function (queueId) {
     return new Promise(function (res, rej) {
         queue.find({queueId: queueId, isSend: false}, function (err, listQueue) {
             if(err) rej(err);
@@ -36,7 +37,7 @@ queueController.getListByQueueId = function (queueId) {
     })
 };
 
-queueController.updateSend = function (arrayId) {
+queueModel.updateSend = function (arrayId) {
     return new Promise(function (res, rej) {
         for(item of arrayId){
             queue.findByIdAndUpdate(item, { $set: { isSend: true }}, function (err, queue) {
@@ -48,5 +49,15 @@ queueController.updateSend = function (arrayId) {
 };
 
 
+queueModel.getQueueByTime = function (time) {
+    return new Promise(function (res, rej) {
+        queue.find({timeToSent: time, isSend: false}, function (err, listQueue) {
+            if(err) rej(err);
+            if(listQueue){
+                res(listQueue);
+            }
+        })
+    })
+};
 
-module.exports = queueController;
+module.exports = queueModel;
